@@ -1,0 +1,29 @@
+name: org-policy
+
+on:
+  workflow_call:
+
+jobs:
+  org-policy:
+    runs-on: ubuntu-latest
+    outputs:
+      is_node: ${{ steps.detect.outputs.is_node }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect project type
+        id: detect
+        run: |
+          if [ -f package.json ]; then
+            echo "is_node=true" >> "$GITHUB_OUTPUT"
+            echo "Node.js project detected"
+          else
+            echo "is_node=false" >> "$GITHUB_OUTPUT"
+            echo "No Node.js project detected. Policy not applicable."
+          fi
+
+  npm-policy:
+    needs: org-policy
+    if: needs.org-policy.outputs.is_node == 'true'
+    uses: coinspect/.github/.github/workflows/npm-policy.yml@main
