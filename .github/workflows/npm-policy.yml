@@ -44,6 +44,22 @@ jobs:
             echo "missing: allow-git=none in .npmrc" >&2
             exit 1
           fi
+          if ! grep -Eq '^engine-strict=true$' .npmrc; then
+            echo "missing: engine-strict=true in .npmrc" >&2
+            exit 1
+          fi
+
+      - name: Check package.json engines
+        run: |
+          if ! node -e "
+            const pkg = require('./package.json');
+            if (!pkg.engines || !pkg.engines.npm) {
+              process.stderr.write('missing: engines.npm in package.json\n');
+              process.exit(1);
+            }
+          "; then
+            exit 1
+          fi
 
       - name: Install with locked dependencies
         run: npm ci
