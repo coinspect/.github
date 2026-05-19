@@ -1,0 +1,46 @@
+name: npm-policy
+
+on:
+  workflow_call:
+
+jobs:
+  npm-policy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check npm version
+        run: |
+          NPM_VERSION=$(npm --version)
+          echo "npm $NPM_VERSION"
+          MAJOR=$(echo "$NPM_VERSION" | cut -d. -f1)
+          MINOR=$(echo "$NPM_VERSION" | cut -d. -f2)
+          if [ "$MAJOR" -lt 11 ] || { [ "$MAJOR" -eq 11 ] && [ "$MINOR" -lt 10 ]; }; then
+            echo "npm >= 11.10.0 required, got $NPM_VERSION" >&2
+            exit 1
+          fi
+
+      - name: Check .npmrc policy
+        run: |
+          if [ ! -f .npmrc ]; then
+            echo ".npmrc not found" >&2
+            exit 1
+          fi
+          if ! grep -Eq '^min-release-age=14$' .npmrc; then
+            echo "missing: min-release-age=14 in .npmrc" >&2
+            exit 1
+          fi
+          if ! grep -Eq '^allow-git=none$' .npmrc; then
+            echo "missing: allow-git=none in .npmrc" >&2
+            exit 1
+          fi
+
+      - name: Install with locked dependencies
+        run: npm ci
+        
