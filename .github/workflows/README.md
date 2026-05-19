@@ -49,3 +49,5 @@ Requires a `.npmrc` in the repo root:
 min-release-age=14
 allow-git=none
 ```
+
+The workflow sets `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` at the job level to allow `npm ci` to resolve packages from private GitHub npm registries. If the repo uses only public packages this has no effect, but it is required for any repo that pulls from `npm.pkg.github.com`.
